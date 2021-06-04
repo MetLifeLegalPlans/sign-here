@@ -6,64 +6,8 @@ from fitz import Document, Rect
 from .exceptions import AddImageArgumentError
 
 
-DEFAULT_SCALAR = 0.75
-
 
 DYNAMIC_TEXT = "text"
-IMAGE_CONSTANTS = Box(
-    {
-        "signature": {
-            "max_x": 175,
-            "max_y": 40,
-            "x_offset": 0,
-            "y_offset": -35,
-        },
-        "initials": {
-            "max_x": 37,
-            "max_y": 37,
-            "x_offset": -38,
-            "y_offset": -15,
-            "yes": {
-                "max_x": 37,
-                "max_y": 37,
-                "x_offset": -93,
-                "y_offset": -15,
-            },
-            "checkbox": {
-                "max_x": 45,
-                "max_y": 45,
-                "x_offset": 0.10,
-                "y_offset": 0.2,
-                "x_scalar": 0.8,
-            },
-        },
-        "seal": {
-            "max_x": 256,
-            "max_y": 150,
-            "x_offset": -25,
-            "y_offset": -140,
-        },
-        "checkmark": {
-            "max_x": 18,
-            "max_y": 18,
-            "x_offset": -11,
-            "y_offset": -6,
-        },
-        DYNAMIC_TEXT: {
-            "x_offset": 3,
-            "y_offset": -15,
-            "inline": {
-                "x_offset": 3,
-                "y_offset": -2,
-            },
-            "under_seal": {
-                "x_offset": -18,
-                "y_offset": -24,
-            },
-        },
-    }
-)
-
 
 def add_images_to_pdf(
     initial_pdf,
