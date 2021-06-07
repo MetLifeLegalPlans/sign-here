@@ -2,32 +2,38 @@ import re
 from io import BytesIO
 from box import Box
 from fitz import Document, Rect
+from typing import Callable
+from PIL import Image
 
 from .exceptions import AddImageArgumentError
 
 
-
 DYNAMIC_TEXT = "text"
 
+
 def add_images_to_pdf(
-    initial_pdf,
-    metadata,
-    img_loader,
-    dynamic_text,
-    only_matches=None,
-    page_numbers=None,
-    loader_args=None,
-):
+    initial_pdf: bytes,
+    metadata: list[dict],
+    img_loader: Callable[str, Image],
+    dynamic_text: dict[str, str],
+    only_matches: str = None,
+    page_numbers: list[int] = None,
+) -> Document:
     """
-    pdf is the pdf buffer in bytes.
-    metadata is a list of dictionaries, with each index of the list representing a page
+    This function adds an image to a PDF document.
+
+    :param initial_pdf: A pdf buffer in bytes
+    :param metadata: A list of dictionaries, with each index of the list representing a page
         and each dictionary showing which image fits where on that page.
-    img_loader is a function that should take in an image name and return a Pillow image.
-    only_matches is an optional regex string, and will insert only the images whose names match
-        that regex. for instance, if you pass in "notary", this will only insert the values
-        for the notary.
-    page_numbers is an optional list where you can specify only the page numbers that should
-        be signed. this works with `only_matches` as well, if desired.
+    :param img_loader: A function that should take in an image name and return a Pillow image.
+    :param dynamic_text: A dictionary of text to add to images keyed by the image that the text
+        should be inserted into.
+    :param only_matches: A regex string, will insert only the images whose names match
+        that regex. For instance, if you pass in "notary", this will only insert the values
+        for the notary. Optional
+    :param page_numbers: A list where you can specify only the page numbers that should
+        be signed. this works with `only_matches` as well, if desired. Optional
+    :return: A pdf document with the inserted images and text
     """
     # Don't edit the existing PDF, instead create a new one from it and add images and text
     # to that new one.
@@ -68,7 +74,6 @@ def add_images_to_pdf(
                     coords_list,
                     page,
                     img_settings,
-                    loader_args,
                 )
     return pdf
 
@@ -81,7 +86,6 @@ def _add_dynamic_text(
     page,
     img_settings,
     img_loader,
-    loader_args,
 ):
     try:
         text_to_add = dynamic_text[img_name]
@@ -91,7 +95,7 @@ def _add_dynamic_text(
             text_to_add = dynamic_text[img_name.rsplit("__", 1)[0]]
         except KeyError:
             # Last backup: see if the given image loader will give us what we want.
-            text_to_add = img_loader(img_name, *loader_args)
+            text_to_add = img_loader(img_name)
     for coords in coords_list:
         pdf = add_text_to_pdf(
             pdf,
@@ -104,8 +108,8 @@ def _add_dynamic_text(
         )
 
 
-def _add_image(pdf, img_name, img_loader, coords_list, page, img_settings, loader_args):
-    pillow_img = img_loader(img_name, *loader_args)
+def _add_image(pdf, img_name, img_loader, coords_list, page, img_settings):
+    pillow_img = img_loader(img_name)
     # Crop to the box that has the signature or initials in it.
     pillow_img = pillow_img.crop(pillow_img.getbbox())
     img = BytesIO()
@@ -161,8 +165,19 @@ def add_image_to_pdf(
     """
     Add an image to a PDF document, at the specified page and coordinates.
 
-    Optionally takes an decimal-represented interpolation percentage to specify
-    image placement relative to the coordinates.
+    :param document: A pdf Document to add an image to
+    :param image_buffer:
+    :param img_width: Width of the image being added
+    :param img_heigh: Height of the image being added
+    :param page_num: Page to add the image
+    :param x: x coordinate to insert the image, optional
+    :param y: y coordinate to insert the image, optional
+    :param x_offset: decimal-represented interpolation percentage to specify
+        image placement relative to the x coordinate, optional
+    :param y_offset: decimal-represented interpolation percentage to specify
+        image placement relative to the y coordinate, optional
+    :return: pdf as a bytestring
+
     """
     _do_checks(page_num, x, y)
 
@@ -194,8 +209,19 @@ def add_text_to_pdf(
     """
     Add text to a PDF document, at the specified page and coordinates.
 
-    Optionally takes an decimal-represented interpolation percentage to specify
-    image placement relative to the coordinates, as well as a fontsize.
+    :param document: A pdf Document to add an image to
+    :param image_buffer:
+    :param img_width: Width of the image being added
+    :param img_heigh: Height of the image being added
+    :param page_num: Page to add the image
+    :param x: x coordinate to insert the image, optional
+    :param y: y coordinate to insert the image, optional
+    :param x_offset: decimal-represented interpolation percentage to specify
+        image placement relative to the x coordinate, optional
+    :param y_offset: decimal-represented interpolation percentage to specify
+        image placement relative to the y coordinate, optional
+    :param fontsize: fontsize for the inserted text, optional
+
     """
     _do_checks(page_num, x, y)
 
