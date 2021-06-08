@@ -2,8 +2,8 @@ import re
 from io import BytesIO
 from box import Box
 from fitz import Document, Rect
-from typing import Callable
-from PIL import Image
+from typing import Callable, List, Dict
+from PIL.Image import Image
 
 from .exceptions import AddImageArgumentError
 
@@ -13,11 +13,11 @@ DYNAMIC_TEXT = "text"
 
 def add_images_to_pdf(
     initial_pdf: bytes,
-    metadata: list[dict],
-    img_loader: Callable[str, Image],
-    dynamic_text: dict[str, str],
+    metadata: List[Dict],
+    img_loader: Callable[[str], Image],
+    dynamic_text: Dict[str, str],
     only_matches: str = None,
-    page_numbers: list[int] = None,
+    page_numbers: List[int] = None,
 ) -> Document:
     """
     This function adds an image to a PDF document.

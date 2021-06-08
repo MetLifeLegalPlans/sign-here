@@ -10,3 +10,5 @@ Sign-here's documentation!
    :maxdepth: 2
 
    introduction
+   documentation
+
