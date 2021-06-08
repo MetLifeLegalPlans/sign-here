@@ -6,10 +6,6 @@ Image to come
 
 `sign-here` is a python library to insert signatures into PDF documents.
 
-## How does it work?
-
-Magic.
-
 ## Installation
 
 ### Requirements
@@ -18,13 +14,6 @@ Magic.
 
 ```bash
 pip install --upgrade sign-here
-```
-
-## Usage
-
-```python
-import signhere.utils
-signhere.utils.
 ```
 
 ---
