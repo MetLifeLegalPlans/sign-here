@@ -1,0 +1,2 @@
+class AddImageArgumentError(AssertionError):
+    pass
