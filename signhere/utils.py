@@ -210,8 +210,8 @@ def add_image_to_pdf(
     img_width: float,
     img_height: float,
     page_num: int = 0,
-    x: float = 0,
-    y: float = 0,
+    x: float = 0.0,
+    y: float = 0.0,
     x_offset: float = 0.0,
     y_offset: float = 0.0,
 ) -> bytes:
