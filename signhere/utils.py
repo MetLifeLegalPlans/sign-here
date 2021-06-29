@@ -5,7 +5,7 @@ This module includes functions to insert images and text into PDF documents. Thi
 import re
 from io import BytesIO
 from fitz import Document, Rect
-from typing import Callable, List, Dict, Tuple, NewType, Union
+from typing import Callable, List, Dict, Tuple, NewType, Union, Optional
 from PIL.Image import Image
 
 from .exceptions import AddImageArgumentError
@@ -41,7 +41,7 @@ Constant used to identify an "image" as actually being text that should be inser
 """
 
 
-def make_image_name(img_type: str, name: str, sub_type: str = None):
+def make_image_name(img_type: str, name: str, sub_type: Optional[str] = None):
     """
     Helper function for creating names for images that includes their type / sub type in the format expected in add_images_to_pdf
 
@@ -60,9 +60,9 @@ def add_images_to_pdf(
     metadata: List[Dict[str, List[Tuple[float, float]]]],
     img_loader: Callable[[str], Image],
     dynamic_text: Dict[str, str],
-    only_matches: str = None,
-    page_numbers: List[int] = None,
-    default_img_settings: DefaultImageSettings = None,
+    only_matches: Optional[str] = None,
+    page_numbers: Optional[List[int]] = None,
+    default_img_settings: Optional[DefaultImageSettings] = None,
 ) -> Document:
     """
     This function adds an image to a PDF document.
@@ -148,10 +148,10 @@ def _add_dynamic_text(
             pdf,
             text_to_add,
             page,
-            x=coords[0] * img_settings.get("x_scalar", 1),
-            y=coords[1] * img_settings.get("y_scalar", 1),
-            x_offset=img_settings.get(x_offset, 0),
-            y_offset=img_settings.get(y_offset, 0),
+            x=coords[0] * img_settings.get("x_scalar", 1.0),
+            y=coords[1] * img_settings.get("y_scalar", 1.0),
+            x_offset=img_settings.get("x_offset", 0.0),
+            y_offset=img_settings.get("y_offset", 0.0),
         )
 
 
@@ -175,16 +175,16 @@ def _add_image(
             img_settings.get("max_x", 0),
             img_settings.get("max_y", 0),
             page,
-            x=coords[0] * img_settings.get("x_scalar", 1),
-            y=coords[1] * img_settings.get("y_scalar", 1),
-            x_offset=img_settings.get("x_offset", 0),
-            y_offset=img_settings.get("y_offset", 0),
+            x=coords[0] * img_settings.get("x_scalar", 1.0),
+            y=coords[1] * img_settings.get("y_scalar", 1.0),
+            x_offset=img_settings.get("x_offset", 0.0),
+            y_offset=img_settings.get("y_offset", 0.0),
         )
 
 
 def _get_img_data(
     img_name: str, default_img_settings: DefaultImageSettings
-) -> ImageSettings:
+) -> Tuple[str, str, ImageSettings]:
     """Anchor names for images are formatted so:
     {type}__{optional: person/role}{optional: __{subtype}}
     We use the type and optional subtype to figure out how to load the image and what
@@ -210,8 +210,8 @@ def add_image_to_pdf(
     img_width: float,
     img_height: float,
     page_num: int = 0,
-    x: int = 0,
-    y: int = 0,
+    x: float = 0,
+    y: float = 0,
     x_offset: float = 0.0,
     y_offset: float = 0.0,
 ) -> bytes:
@@ -253,8 +253,8 @@ def add_text_to_pdf(
     document: Document,
     text: str,
     page_num: int = 0,
-    x: int = 0,
-    y: int = 0,
+    x: float = 0.0,
+    y: float = 0.0,
     x_offset: float = 0.0,
     y_offset: float = 0.0,
     fontsize: int = 11,
