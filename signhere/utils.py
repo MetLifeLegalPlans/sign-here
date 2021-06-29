@@ -87,8 +87,6 @@ def add_images_to_pdf(
     # to that new one.
     pdf = Document()
     pdf.insertPDF(initial_pdf)
-    if not loader_args:
-        loader_args = []
     for page, page_data in enumerate(metadata):
         if not page_data:
             # Nothing to insert on this page.
@@ -114,7 +112,6 @@ def add_images_to_pdf(
                     page,
                     img_settings,
                     img_loader,
-                    loader_args,
                 )
             else:
                 _add_image(
