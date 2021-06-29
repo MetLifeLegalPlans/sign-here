@@ -201,21 +201,6 @@ toml = "*"
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
-name = "python-box"
-version = "5.3.0"
-description = "Advanced Python dictionaries with dot notation access"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-pyyaml = ["pyyaml"]
-all = ["ruamel.yaml", "toml", "msgpack"]
-msgpack = ["msgpack"]
-"ruamel.yaml" = ["ruamel.yaml"]
-toml = ["toml"]
-
-[[package]]
 name = "pytz"
 version = "2021.1"
 description = "World timezone definitions, modern and historical"
@@ -375,7 +360,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "830caaa457c0cb05f55600ab5fa3e72f773fd85ff138e3bc9c7e4813d8e02e0b"
+content-hash = "fb8656bf54c03eae680d80a342aac09f41a60553bb2e74576402858385686f36"
 
 [metadata.files]
 alabaster = [
@@ -544,10 +529,6 @@ pyparsing = [
 pytest = [
     {file = "pytest-6.2.4-py3-none-any.whl", hash = "sha256:91ef2131a9bd6be8f76f1f08eac5c5317221d6ad1e143ae03894b862e8976890"},
     {file = "pytest-6.2.4.tar.gz", hash = "sha256:50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b"},
-]
-python-box = [
-    {file = "python-box-5.3.0.tar.gz", hash = "sha256:4ed4ef5d34de505a65c01e3f1911de8cdb29484fcae0c035141dce535c6c194a"},
-    {file = "python_box-5.3.0-py3-none-any.whl", hash = "sha256:f2a531f9f5bbef078c175fad6abb31e9b59d40d121ea79993197e6bb221c6be6"},
 ]
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
