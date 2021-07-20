@@ -25,44 +25,40 @@ The following keys are optional. The default value is 1 (no scaling)
 These values will be combined with a (x, y) coordinate to produce the final position, scaling, and size.
 """
 
-DefaultImageSettings = NewType(
-    "DefaultImageSettings", Dict[str, Union[ImageSettings, Dict[str, ImageSettings]]]
-)
+PlacementSettings = NewType("PlacementSettings", Dict[str, ImageSettings])
 """
 Dictionary that is used as default values for image settings. The keys should be the image type (which should be part of the image name). The value should be a ImageSettings dictionary. In addition to the ImageSettings keys there can be an additional key where the key value is a string representing the "sub-type" and the value is another ImageSettings dictionary.
 
 The image type of DYNAMIC_TEXT is a special key that will be applied to text (instead of images) inserted. Subtypes can be used under the DYNAMIC_TEXT entry like the other image types. 
 """
 
-DYNAMIC_TEXT = "text"
+
+NAME_SEPARATOR = "__"
 
 """
 Constant used to identify an "image" as actually being text that should be inserted as if it was an image. 
 """
 
 
-def make_image_name(img_type: str, name: str, sub_type: Optional[str] = None):
+def make_image_name(img_type: str, name: str):
     """
-    Helper function for creating names for images that includes their type / sub type in the format expected in add_images_to_pdf
+    Helper function for creating names for images that includes their type in the format expected in add_images_to_pdf
 
     :param img_type: The top level type of the image as a string
     :param name: The name of the image as a string
-    :param sub_type: The sub type of the image, optional
     """
-    if sub_type:
-        return f"{img_type}__{name}__{sub_type}"
-    else:
-        return f"{img_type}__{name}"
+    return f"{img_type}{NAME_SEPARATOR}{name}"
 
 
 def add_images_to_pdf(
     initial_pdf: bytes,
     metadata: List[Dict[str, List[Tuple[float, float]]]],
     img_loader: Callable[[str], Image],
-    dynamic_text: Dict[str, str],
+    placement_settings: PlacementSettings,
+    dynamic_text: Optional[Dict[str, str]] = None,
+    dynamic_text_types: Optional[List[str]] = None,
     only_matches: Optional[str] = None,
     page_numbers: Optional[List[int]] = None,
-    default_img_settings: Optional[DefaultImageSettings] = None,
 ) -> Document:
     """
     This function adds an image to a PDF document.
@@ -71,18 +67,20 @@ def add_images_to_pdf(
     :param metadata: A list of dictionaries, with each index of the list representing a page
         and each dictionary showing which image fits where on that page.
     :param img_loader: A function that should take in an image name and return a Pillow image.
+    :param placement_settings: A dictionary with image types as keys and the default
+        parameters for inserting them as the values.
     :param dynamic_text: A dictionary of text to add to images keyed by the image that the text
-        should be inserted into.
+        should be inserted into. Optional
+    :param dynamic_text_types: A list of types as strings that match keys in the placement settings. Images with one of these types will be looked up in the dynamic_text dictionary instead of being loaded with the img_loader function. Optional
     :param only_matches: A regex string, will insert only the images whose names match
         that regex. For instance, if you pass in "notary", this will only insert the values
         for the notary. Optional
     :param page_numbers: A list where you can specify only the page numbers that should
         be signed. this works with `only_matches` as well, if desired. Optional
-    :param default_img_settings: A dictionary with image types as keys and the default
-        parameters for inserting them as the values.
     :return: A pdf document with the inserted images and text
     """
-    default_img_settings = default_img_settings or {}
+    dynamic_text = dynamic_text or {}
+    dynamic_text_types = dynamic_text_types or []
     # Don't edit the existing PDF, instead create a new one from it and add images and text
     # to that new one.
     pdf = Document()
@@ -100,10 +98,10 @@ def add_images_to_pdf(
                 continue
 
             img_name, img_type, img_settings = _get_img_data(
-                img_name, default_img_settings
+                img_name, placement_settings
             )
 
-            if img_type == DYNAMIC_TEXT:
+            if img_type in dynamic_text_types:
                 _add_dynamic_text(
                     pdf,
                     img_name,
@@ -183,23 +181,16 @@ def _add_image(
 
 
 def _get_img_data(
-    img_name: str, default_img_settings: DefaultImageSettings
+    img_name: str, placement_settings: PlacementSettings
 ) -> Tuple[str, str, ImageSettings]:
     """Anchor names for images are formatted so:
-    {type}__{optional: person/role}{optional: __{subtype}}
-    We use the type and optional subtype to figure out how to load the image and what
+    {type}__{optional: person/role}
+    We use the type to figure out how to load the image and what
     settings to use to position and resize the image. The returned image name is what's
     used to load or generate the image.
     """
-    split = img_name.split("__")
-    img_type = split[0]
-    img_settings = default_img_settings.get(img_type, {})
-    if len(split) == 3:
-        # This has a possible subtype. Get the name without the subtype to return.
-        img_name = "__".join([s for s in split[:-1] if s])
-        if split[-1] in img_settings:
-            # This has a sub type that we need to use for placement/size settings.
-            img_settings = img_settings[split[-1]]
+    img_type = img_name.split(NAME_SEPARATOR)[0]
+    img_settings = placement_settings.get(img_type, {})
 
     return img_name, img_type, img_settings
 
@@ -280,7 +271,6 @@ def add_text_to_pdf(
 
     page = document[page_num]
     page.cleanContents()
-
     rect = Rect(x + x_offset, y + y_offset, x + x_offset + 500, y + y_offset + 100)
 
     page.insertTextbox(rect, buffer=text, fontsize=fontsize, fontname="times-roman")
