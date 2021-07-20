@@ -27,16 +27,14 @@ These values will be combined with a (x, y) coordinate to produce the final posi
 
 PlacementSettings = NewType("PlacementSettings", Dict[str, ImageSettings])
 """
-Dictionary that is used as default values for image settings. The keys should be the image type (which should be part of the image name). The value should be a ImageSettings dictionary. In addition to the ImageSettings keys there can be an additional key where the key value is a string representing the "sub-type" and the value is another ImageSettings dictionary.
-
-The image type of DYNAMIC_TEXT is a special key that will be applied to text (instead of images) inserted. Subtypes can be used under the DYNAMIC_TEXT entry like the other image types. 
+Dictionary that is used as default values for image settings. The keys should be the image type (which should be part of the image name). The value should be a ImageSettings dictionary.
 """
 
 
 NAME_SEPARATOR = "__"
 
 """
-Constant used to identify an "image" as actually being text that should be inserted as if it was an image. 
+Constant used to separate the "type" of the image and the name of the image. The type is used to lookup the placement settings 
 """
 
 
@@ -135,12 +133,8 @@ def _add_dynamic_text(
     try:
         text_to_add = dynamic_text[img_name]
     except KeyError:
-        try:
-            # That dynamic text doesn't exist, try looking for it more generally.
-            text_to_add = dynamic_text[img_name.rsplit("__", 1)[0]]
-        except KeyError:
-            # Last backup: see if the given image loader will give us what we want.
-            text_to_add = img_loader(img_name)
+        # Last backup: see if the given image loader will give us what we want.
+        text_to_add = img_loader(img_name)
     for coords in coords_list:
         pdf = add_text_to_pdf(
             pdf,
