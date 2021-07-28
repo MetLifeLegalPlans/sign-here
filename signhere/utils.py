@@ -10,7 +10,22 @@ from PIL.Image import Image
 
 from .exceptions import AddImageArgumentError
 
-ImageSettings = NewType("ImageSettings", Dict[str, Union[int, float]])
+
+DEFAULT_PLACEMENT_SETTINGS = {
+    "x_offset": 0,
+    "y_offset": 0,
+    "max_x": 0,
+    "max_y": 0,
+    "x_scalar": 1,
+    "y_scalar": 1
+}
+"""
+Constant dictionary that describes the default values for placing an image into the PDF
+"""
+
+
+ImageSettings = NewType(
+"ImageSettings", Dict[str, Union[int, float]])
 """
 An alias for the dictionary used for image settings. The following keys are required
 - x_offset: A float offset in x of where to place the image
@@ -25,14 +40,25 @@ The following keys are optional. The default value is 1 (no scaling)
 These values will be combined with a (x, y) coordinate to produce the final position, scaling, and size.
 """
 
-PlacementSettings = NewType("PlacementSettings", Dict[str, ImageSettings])
+PlacementSettings = NewType(
+    "PlacementSettings", Dict[str, Union[ImageSettings, Dict[str, ImageSettings]]]
+)
 """
-Dictionary that is used as default values for image settings. The keys should be the image type (which should be part of the image name). The value should be a ImageSettings dictionary.
+Dictionary that is used as default values for image settings. The keys should be the image type (which should be part of the image name). The value should be a ImageSettings dictionary. In addition to the ImageSettings keys there can be an additional key where the key value is a string representing the "sub-type" and the value is another ImageSettings dictionary.
+
+The image type of DYNAMIC_TEXT is a special key that will be applied to text (instead of images) inserted. Subtypes can be used under the DYNAMIC_TEXT entry like the other image types. 
+
+All images type need to be in this dictionary or the "image" will be treated as dynamic text.
 """
 
 
-NAME_SEPARATOR = "__"
+SEPARATOR = "__"
+"""
+Separator between parts of image and dynamic text names.
+"""
 
+
+DYNAMIC_TEXT = "text"
 """
 Constant used to separate the "type" of the image and the name of the image. The type is used to lookup the placement settings 
 """
@@ -45,16 +71,30 @@ def make_image_name(img_type: str, name: str):
     :param img_type: The top level type of the image as a string
     :param name: The name of the image as a string
     """
-    return f"{img_type}{NAME_SEPARATOR}{name}"
+    if sub_type:
+        return f"{img_type}{SEPARATOR}{name}{SEPARATOR}{sub_type}"
+    else:
+        return f"{img_type}{SEPARATOR}{name}"
+
+
+def make_text_name(description: str, person: Optional[str] = None, sub_type: Optional[str] = None):
+    """
+    Helper function for creating names for dynamic text that includes their description, the person the field is for, and the sub type
+    :param description: Description of the text field
+    :param person: The description of the person the text field is for, optional
+    :param sub_type: The sub type for looking up the placement settings, optional
+    """
+    person_str = f"{SEPARATOR}{person}" if person else ""
+    sub_type_str = f"{SEPARATOR}{sub_type}" if sub_type else ""
+    return f"{description}{person_str}{sub_type_str}"
 
 
 def add_images_to_pdf(
     initial_pdf: bytes,
     metadata: List[Dict[str, List[Tuple[float, float]]]],
     img_loader: Callable[[str], Image],
-    placement_settings: PlacementSettings,
-    dynamic_text: Optional[Dict[str, str]] = None,
-    dynamic_text_types: Optional[List[str]] = None,
+    dynamic_text: Dict[str, str],
+    placement_settings: PlacementSettings = None,
     only_matches: Optional[str] = None,
     page_numbers: Optional[List[int]] = None,
 ) -> Document:
@@ -65,11 +105,10 @@ def add_images_to_pdf(
     :param metadata: A list of dictionaries, with each index of the list representing a page
         and each dictionary showing which image fits where on that page.
     :param img_loader: A function that should take in an image name and return a Pillow image.
-    :param placement_settings: A dictionary with image types as keys and the default
-        parameters for inserting them as the values.
     :param dynamic_text: A dictionary of text to add to images keyed by the image that the text
-        should be inserted into. Optional
-    :param dynamic_text_types: A list of types as strings that match keys in the placement settings. Images with one of these types will be looked up in the dynamic_text dictionary instead of being loaded with the img_loader function. Optional
+        should be inserted into.
+    :param placement_settings: A dictionary with image types as keys and the default
+        parameters for inserting them or a dictionary with subtype parameters as the values.
     :param only_matches: A regex string, will insert only the images whose names match
         that regex. For instance, if you pass in "notary", this will only insert the values
         for the notary. Optional
@@ -77,8 +116,7 @@ def add_images_to_pdf(
         be signed. this works with `only_matches` as well, if desired. Optional
     :return: A pdf document with the inserted images and text
     """
-    dynamic_text = dynamic_text or {}
-    dynamic_text_types = dynamic_text_types or []
+    placement_settings = placement_settings or {}
     # Don't edit the existing PDF, instead create a new one from it and add images and text
     # to that new one.
     pdf = Document()
@@ -99,7 +137,7 @@ def add_images_to_pdf(
                 img_name, placement_settings
             )
 
-            if img_type in dynamic_text_types:
+            if img_type == DYNAMIC_TEXT:
                 _add_dynamic_text(
                     pdf,
                     img_name,
@@ -133,8 +171,13 @@ def _add_dynamic_text(
     try:
         text_to_add = dynamic_text[img_name]
     except KeyError:
-        # Last backup: see if the given image loader will give us what we want.
-        text_to_add = img_loader(img_name)
+        try:
+            # That dynamic text doesn't exist, try looking for it more generally.
+            # Removes the personal role and just looks at the description.
+            text_to_add = dynamic_text[img_name.rsplit(SEPARATOR, 1)[0]]
+        except KeyError:
+            # Last backup: see if the given image loader will give us what we want.
+            text_to_add = img_loader(img_name)
     for coords in coords_list:
         pdf = add_text_to_pdf(
             pdf,
@@ -183,10 +226,20 @@ def _get_img_data(
     settings to use to position and resize the image. The returned image name is what's
     used to load or generate the image.
     """
-    img_type = img_name.split(NAME_SEPARATOR)[0]
-    img_settings = placement_settings.get(img_type, {})
+    split = img_name.split(SEPARATOR)
+    img_type = split[0]
+    # if the type isn't in the placement settings it is set as "text"
+    if img_type not in placement_settings:
+        img_type = DYNAMIC_TEXT
 
-    return img_name, img_type, img_settings
+    img_settings = placement_settings.get(img_type, {})
+    img_data = dict(DEFAULT_PLACEMENT_SETTINGS)
+    img_data.update(img_settings)
+    if split[-1] in img_settings:
+        img_name = SEPARATOR.join([s for s in split[:-1] if s])
+        img_data.update(img_settings[split[-1]])
+        
+    return img_name, img_type, img_data
 
 
 def add_image_to_pdf(
