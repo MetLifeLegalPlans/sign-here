@@ -45,7 +45,7 @@ PlacementSettings = NewType(
 """
 Dictionary that is used as default values for image settings. The keys should be the image type (which should be part of the image name). The value should be a ImageSettings dictionary. In addition to the ImageSettings keys there can be an additional key where the key value is a string representing the "sub-type" and the value is another ImageSettings dictionary.
 
-The image type of DYNAMIC_TEXT is a special key that will be applied to text (instead of images) inserted. Subtypes can be used under the DYNAMIC_TEXT entry like the other image types. 
+The image type of DYNAMIC_TEXT is a special key that will be applied to text (instead of images) inserted. Subtypes can be used under the DYNAMIC_TEXT entry like the other image types.
 
 All images type need to be in this dictionary or the "image" will be treated as dynamic text.
 """
@@ -59,7 +59,7 @@ Separator between parts of image and dynamic text names.
 
 DYNAMIC_TEXT = "text"
 """
-Constant used to separate the "type" of the image and the name of the image. The type is used to lookup the placement settings 
+Constant used to separate the "type" of the image and the name of the image. The type is used to lookup the placement settings
 """
 
 
@@ -77,17 +77,17 @@ def make_image_name(img_type: str, name: str):
 
 
 def make_text_name(
-    description: str, person: Optional[str] = None, sub_type: Optional[str] = None
+    description: str, role: Optional[str] = None, sub_type: Optional[str] = None
 ):
     """
-    Helper function for creating names for dynamic text that includes their description, the person the field is for, and the sub type
+    Helper function for creating names for dynamic text that includes their description, the role of the person the field is for, and the sub type
     :param description: Description of the text field
-    :param person: The description of the person the text field is for, optional
+    :param role: The role of the person the text field is for, optional
     :param sub_type: The sub type for looking up the placement settings, optional
     """
-    person_str = f"{SEPARATOR}{person}" if person else ""
+    role_str = f"{SEPARATOR}{role}" if role else ""
     sub_type_str = f"{SEPARATOR}{sub_type}" if sub_type else ""
-    return f"{description}{person_str}{sub_type_str}"
+    return f"{description}{role_str}{sub_type_str}"
 
 
 def add_images_to_pdf(
