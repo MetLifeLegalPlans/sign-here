@@ -1,5 +1,4 @@
 import pytest
-from io import BytesIO
 
 from fitz import Document
 

@@ -17,10 +17,10 @@ PLACEMENT_SETTINGS = {
     "text": {},
 }
 
-DYNAMIC_TEXT = {"text__name": "test name"}
+DYNAMIC_TEXT = {"name__test": "test name", "date": "9/12/2019"}
 
 
-def test_adding_valid_image():
+def test_adding_multiple_images_and_text():
     document = Document()
     document.insertPage(-1, text="(watermark)", width=32, height=32)
 
@@ -39,7 +39,8 @@ def test_adding_valid_image():
         metadata.append(
             {
                 f"image__{page_num}": [[0, 0]],
-                f"text__name": [[50, 50]],
+                "name__test": [[50, 50]],
+                "date__test": [[10, 10]],
             }
         )
 
@@ -47,7 +48,6 @@ def test_adding_valid_image():
         document,
         metadata,
         img_loader,
-        PLACEMENT_SETTINGS,
         DYNAMIC_TEXT,
-        ["text"],
+        PLACEMENT_SETTINGS,
     )
