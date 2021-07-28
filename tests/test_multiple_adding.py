@@ -17,10 +17,7 @@ PLACEMENT_SETTINGS = {
     "text": {},
 }
 
-DYNAMIC_TEXT = {
-    "name__test": "test name",
-    "date": "9/12/2019"
-}
+DYNAMIC_TEXT = {"name__test": "test name", "date": "9/12/2019"}
 
 
 def test_adding_multiple_images_and_text():
@@ -42,8 +39,8 @@ def test_adding_multiple_images_and_text():
         metadata.append(
             {
                 f"image__{page_num}": [[0, 0]],
-                f"name__test": [[50, 50]],
-                f"date__test": [[10, 10]],
+                "name__test": [[50, 50]],
+                "date__test": [[10, 10]],
             }
         )
 

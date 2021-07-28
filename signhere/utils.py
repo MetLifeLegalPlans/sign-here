@@ -1,5 +1,5 @@
 """
-This module includes functions to insert images and text into PDF documents. This was originally aimed for inserting signatures as images into legal documentation. It also supports inserting text so that text can be added for answers to questions. This was used for inserting personal information and dates into documents. 
+This module includes functions to insert images and text into PDF documents. This was originally aimed for inserting signatures as images into legal documentation. It also supports inserting text so that text can be added for answers to questions. This was used for inserting personal information and dates into documents.
 """
 
 import re
@@ -17,15 +17,14 @@ DEFAULT_PLACEMENT_SETTINGS = {
     "max_x": 0,
     "max_y": 0,
     "x_scalar": 1,
-    "y_scalar": 1
+    "y_scalar": 1,
 }
 """
 Constant dictionary that describes the default values for placing an image into the PDF
 """
 
 
-ImageSettings = NewType(
-"ImageSettings", Dict[str, Union[int, float]])
+ImageSettings = NewType("ImageSettings", Dict[str, Union[int, float]])
 """
 An alias for the dictionary used for image settings. The following keys are required
 - x_offset: A float offset in x of where to place the image
@@ -77,7 +76,9 @@ def make_image_name(img_type: str, name: str):
         return f"{img_type}{SEPARATOR}{name}"
 
 
-def make_text_name(description: str, person: Optional[str] = None, sub_type: Optional[str] = None):
+def make_text_name(
+    description: str, person: Optional[str] = None, sub_type: Optional[str] = None
+):
     """
     Helper function for creating names for dynamic text that includes their description, the person the field is for, and the sub type
     :param description: Description of the text field
@@ -238,7 +239,7 @@ def _get_img_data(
     if split[-1] in img_settings:
         img_name = SEPARATOR.join([s for s in split[:-1] if s])
         img_data.update(img_settings[split[-1]])
-        
+
     return img_name, img_type, img_data
 
 
