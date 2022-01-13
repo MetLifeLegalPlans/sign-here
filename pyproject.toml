@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-PyMuPDF = "^1.18.13"
+PyMuPDF = "^1.19.4"
 Pillow = ">=8.2,<10.0"
 
 [tool.poetry.dev-dependencies]
